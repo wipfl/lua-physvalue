@@ -2,7 +2,7 @@
 -- Provides a class for physical value arithmetics.
 -- @module PhysValue
 
-
+--[[DEBUG]] package.path = package.path .. ';physvalue/src/?.lua'
 local class = require'middleclass'
 local debug = require'debug'
 
@@ -10,8 +10,7 @@ local debug = require'debug'
 -- Holds the class structure of the module.
 -- 
 -- @type PhysValue  
-PhysValue = class('PhysValue')
-
+local PhysValue = class('PhysValue')
 
 function table.deep_copy(obj, seen)
   -- Handle non-tables and previously-seen tables.
@@ -71,30 +70,49 @@ PhysValue.c = c
 -- to the baseunits table and to the
 -- unit table PhysValue.u
 -- @param symbol the base unit string
-function BaseUnit(symbol)
-  local bunit = PhysValue:new(nil, 1, symbol)
+local function BaseUnit(symbol)
+  local bunit = PhysValue:new(nil, 1, nil)
   bunit.units = {[symbol]=1}
+  bunit.symbol = symbol
   table.insert(baseunits, symbol)
   u[symbol] = bunit
 end
 
 -------------------------------------
+-- Helper function gets a unit instance defined by a string
+-- @param definition String definition of desired unit as
+-- <ul>
+-- <li>an existing unit symbol or</li>
+-- <li>a formula combining already existing units</li>
+-- </ul>
+-- @return PhysValue instance of an unit
+function PhysValue._getUnit(definition)
+  if PhysValue.u[definition] then
+    return PhysValue.u[definition]
+  else
+    assert(loadstring('function _(u) return '..string.gsub(definition,"([A-Za-z]+)", "u['%1']")..'; end') )()
+    return _(PhysValue.u)
+  end
+end
+-------------------------------------
 -- Helper function inserts a Unit (with 
 -- all prefix combinations) to the table
 -- PhysValue.u
--- @param symbol the unit string
+-- @param symbol The unit string (only A-Z and a-z are allowed in string)
 -- @param definition a string with a formula that
 -- defines the unit from already existing
 -- units.
 -- (The unit names in the formula are automatically
 -- prefixed by 'PhysValue.u.' to refence the units table.)
-function Unit(symbol, definition)
-  local b = assert(loadstring('return '..string.gsub(definition,"([A-Za-z]+)", "PhysValue.u.%1")))()
+local function Unit(symbol, definition, withoutPrefix)
+  local b = PhysValue._getUnit(definition)
   u[symbol] = b
   u[symbol].symbol = symbol
-  for prefix,factor in pairs(prefixes) do
-    u[prefix..symbol] = b*factor
-    u[prefix..symbol].symbol = prefix..symbol
+  if not withoutPrefix then
+    for prefix,factor in pairs(prefixes) do
+      u[prefix..symbol] = b*factor
+      u[prefix..symbol].symbol = prefix..symbol
+    end
   end
 end
 
@@ -141,17 +159,24 @@ end
 -------------------------------------
 -- Constructor: called in PhysValue.new().
 -- @param id Identifier string
--- @param value  number Value of the variable in unit 'symbol'
+-- @param value  number Value of the variable in unit 'symbol' or
+-- a PhysValue
 -- @param symbol Unit string (must exist in table u)
+-- (must be omitted of value is given as a PhysValue)
 function PhysValue:initialize(id, value, symbol)
-  if symbol and u[symbol] then
-    local a = value * u[symbol]
-    self.value = a.value
+  if symbol then
+    local a = PhysValue._getUnit(symbol)
+    self.value = value * a.value
     self.units = a.units
     self.symbol = symbol
+  elseif type(value) == 'table' then
+    self.value = value.value or 0
+    self.units = value.units or {}
+    self.symbol = value.symbol or ''
   else
     self.value = value or 0
     self.units = {}
+    self.symbol = ''
   end
   
   self.id = id
@@ -163,17 +188,15 @@ end
 -- @return #PhysValue Sum of self and b. 
 function PhysValue:__add(b)
   local a = PhysValue.deep_copy(self)
-  if PhysValue.UnitMatch(a,b)  then
-    a.value = a.value + b.value
-  else
-    error('Unmatching unit in add: '..tostring(a)..' / '..tostring(b))
-  end
+  assert(type(b)=='table', 'Adding is allowed with PhysValue only')
+  assert(a:UnitMatch(b), 'Unmatching unit in add: '..tostring(a)..' & '..tostring(b))
+  a.value = a.value + b.value
   return a
 end
 
 -------------------------------------
 -- Substract b from self.
--- @param b PhysValue to be subtracted
+-- @param b PhysValue to be subtractedformat
 -- @return #PhysValue Difference of self and b. 
 -- @usage pv1 = pv2 - pv3
 function PhysValue:__sub(b)
@@ -208,6 +231,7 @@ function PhysValue:__mul(b)
       a.units[k] = (a.units[k]or 0) + v
     end
     a.value = a.value * b.value
+    a.symbol = nil
     return a
   end
 end
@@ -242,11 +266,8 @@ end
 -- @return true if self == b
 -- @usage if pv1 == pv2 then ...
 function PhysValue:__eq(b)
-  if self:UnitMatch(b) then
-    return self.value == b.value
-  else
-    PhysValue._error('Unmatching unit in compare ==: '..tostring(self)..' / '..tostring(b))
-  end
+  assert(self:UnitMatch(b),'Unmatching unit in compare ==: '..tostring(self)..' & '..tostring(b))
+  return self.value == b.value
 end
 
 -------------------------------------
@@ -256,11 +277,8 @@ end
 -- @usage if pv1 < pv2 then ...
 --if pv1 > pv2 then ...
 function PhysValue:__lt(b)
-  if self:UnitMatch(b) then
-    return self.value < b.value
-  else
-    error('Unmatching unit in compare <: '..tostring(self)..' / '..tostring(b))
-  end
+  assert(self:UnitMatch(b), 'Unmatching unit in compare <: '..tostring(self)..' & '..tostring(b))
+  return self.value < b.value
 end
 
 -------------------------------------
@@ -270,21 +288,8 @@ end
 -- @usage if pv1 <= pv2 then ...
 --if pv1 >= pv2 then ...
 function PhysValue:__le(b)
-  if self:UnitMatch(b) then
-    return self.value <= b.value
-  else
-    error('Unmatching unit in compare <=: '..tostring(self)..' / '..tostring(b))
-  end
-end
-
--------------------------------------
--- Error Handler.
--- 
--- This function can be overwritten to change the error handling behaviour
--- @param s Error string
--- @param level The stack level for display of error reason.
-function PhysValue._error(s, level)
-  error( s, level  )
+  assert(self:UnitMatch(b), 'Unmatching unit in compare <=: '..tostring(self)..' & '..tostring(b))
+  return self.value <= b.value
 end
 
 -------------------------------------
@@ -313,38 +318,67 @@ end
 -- (defaults to preferred unit of PhysValue given in Constructor)
 -- @return #number giving the base unit factor
 -- @usage PhysValue:new("",1,"km"):_getUnitFactor("mm")
--- returns 1e-3 
+--   returns 1e-3 
 function PhysValue:_getUnitFactor(symbol)
-  symbol = symbol or self.symbol
-  local value = 1
-  local str
-  if symbol then
-    local b = u[symbol] or assert(loadstring('return '..string.gsub(symbol,"([A-Za-z]+)", "PhysValue.u.%1")))()
-    if self:UnitMatch(b) then
-      value = self.value / b.value
-    else
-      error('Unmatching units in format: '..tostring(self)..' / '..tostring(b))
-    end
-  end
-  return value
+  assert(type(symbol) == 'string', 'Unknown conversion unit: ' .. tostring(symbol))
+  local b = PhysValue._getUnit(symbol)
+  assert(self:UnitMatch(b), 'Unmatching units in unit conversion: '..self.symbol..' & '..symbol)
+  return b.value
 end
 
 
 -------------------------------------
 -- String concatanation (..)
+-- Converts the PhysValue into a string using the
+-- unit that is concatenated to self.
+-- @param bString unit string to be converted to
+-- @return String representation of the PhysValue
+-- @usage a = PhysValue:new('',120,'s')
+-- print(a..'min')
+--   gives: '2 min'
 function PhysValue:__concat(bString)
   assert(type(bString)=='string')
   return self:format(nil, bString)
 end
 
 -------------------------------------
--- String conversion
+-- String conversion.
+-- Converts the PhysValue to a string using the
+-- preferred unit that has been chosen in the 
+-- constructor.
+-- This function calls PhysValue:format
+-- with the standard format '#vg #us'
+-- @return String representation of the PhysValue
+-- @usage a = PhysValue:new('',12,'km')
+-- tostring(a)
+--   returns '12 km'
 function PhysValue:__tostring()
   return self:format()
 end
 
 -------------------------------------
--- String format 
+-- String format. 
+-- Formats the PhysValue to a string with a given format
+-- and unit.
+-- @param f Format string.
+-- In the format string can be the following tokens that
+-- are substituted by the fields of the PhysValue:
+-- <ul>
+-- <li> '#v'  substituted by the numerical value </li>
+-- <li> '#u'  substituted by the unit</li>
+-- <li> '#i'  substituted by the id (name)</li>
+-- </ul>
+-- all tokens will be replaced by a '%' character so that
+-- the following characters define the format string for 
+-- the string.format() function.
+-- So the format string '#is: #v5.1f #us' will do the same like
+-- string.format('%s: %5.1f %s', a.id, a.value, a.symbol)
+-- @param symbol The unit string to which the PhysValue is
+-- converted before formatting.
+-- @return String according to given format.
+-- @usage a = PhysValue:new('Distance',12470,'m')
+-- a:format('#is: #v+12.2f [#us]', 'km')
+--   gives 'Distance:       +12.47 [km]'
 function PhysValue:format(f,symbol)
   f = f or "#vg #us"
   symbol = symbol or self.symbol
@@ -368,8 +402,14 @@ end
 
 -------------------------------------
 -- Generate JSon string 
+-- Converts the PhysValue to a Json string with the unit 
+-- converted to the one given in the symbol string.
+-- @param symbol The unit string to be converted to.
+-- @return A Json string.
+-- @usage PhysValue.mElectro:toJson('kg')
+-- will return '{ "id": "mElectron", "value": 9.10939e-31, "unit": "kg"}'
 function PhysValue:toJson(symbol)
-  return self:format('{ "id": "#is", "value": #vg, "unit": "#us"}', symbol)
+  return self:format('{ "id": "#is", "value": #v20g, "unit": "#us"}', symbol)
 end
 
 
@@ -452,7 +492,7 @@ c.mass_neutron = PhysValue:new('mNeutron', 1.67262e-27, 'kg')
 c.mass_proton = PhysValue:new('mProton', 1.67492e-27, 'kg')
 c.epsilon_0 = PhysValue:new('epsilon0', 8.854e-12, 'C^2/(N*m^2)')
 c.k = 1/4*math.pi*c.epsilon_0
-c.N_A = PhysValue:new('N_A', 6.02214129e23, '/mol')
+c.N_A = PhysValue:new('N_A', 6.02214129e23, '1/mol')
 
 --x[[DEBUG
 local function main()
@@ -467,7 +507,8 @@ local function main()
   print(PhysValue.c.mass_e:format("#i8.8s: #v+12g #u-3.3s<-", 'g'))
   print(PhysValue.c.mass_e:toJson())
   --print(PhysValue.c.mass_e:toJson('N'))
-  
+  local a = PhysValue:new('Distance',12470,'m')
+  print(a:format('#is: #v+12.2f [#us]', 'km'))
   local gew2 = PhysValue:new("Gewicht2", 0.102, 'kg')
   
   if (gew1 == gew2) then error('Alarm!') end
@@ -476,6 +517,7 @@ local function main()
   if not (gew1 < gew2) then error('Alarm!') end
   
 end
+
 
 main()
 --]]

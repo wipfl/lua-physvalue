@@ -1,0 +1,878 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>Reference</title>
+    <link rel="stylesheet" href="ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>ldoc</h1>
+
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Class_PhysValue">Class PhysValue </a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="$(kind=='Topics' and '' or 'nowrap'">
+  <li><strong>PhysValue</strong></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>PhysValue</code></h1>
+<p>Provides a class for physical value arithmetics.</p>
+<p></p>
+
+
+<h2><a href="#Class_PhysValue">Class PhysValue </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#PhysValue.prefixes">PhysValue.prefixes</a></td>
+	<td class="summary">Holds the prefixes of units with
+ their factors to baseunit</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#PhysValue.u">PhysValue.u</a></td>
+	<td class="summary">Publishes the units table</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#PhysValue.c">PhysValue.c</a></td>
+	<td class="summary">Publishes the constants table</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#PhysValue:BaseUnit">PhysValue:BaseUnit (symbol)</a></td>
+	<td class="summary">Helper function inserts a BaseUnit
+ to the baseunits table and to the
+ unit table PhysValue.u</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#PhysValue:Unit">PhysValue:Unit (symbol, definition)</a></td>
+	<td class="summary">Helper function inserts a Unit (with
+ all prefix combinations) to the table
+ PhysValue.u</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#PhysValue:UnitMatch">PhysValue:UnitMatch (b)</a></td>
+	<td class="summary">Checks if the unit of self and the unit of b match.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#PhysValue:deep_copy">PhysValue:deep_copy (a)</a></td>
+	<td class="summary">Helper function: deep copies a physical
+ value.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#PhysValue:initialize">PhysValue:initialize (id, value, symbol)</a></td>
+	<td class="summary">Constructor: called in PhysValue.new().</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#PhysValue:__add">PhysValue:__add (b)</a></td>
+	<td class="summary">Add b to self.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#PhysValue:__sub">PhysValue:__sub (b)</a></td>
+	<td class="summary">Substract b from self.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#PhysValue:__unm">PhysValue:__unm ()</a></td>
+	<td class="summary">Unary minus of self.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#PhysValue:__mul">PhysValue:__mul (b)</a></td>
+	<td class="summary">Multiply self by b.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#PhysValue:__pow">PhysValue:__pow (b)</a></td>
+	<td class="summary">Power(b)</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#PhysValue:__div">PhysValue:__div (b)</a></td>
+	<td class="summary">Divide by b</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#PhysValue:__eq">PhysValue:__eq (b)</a></td>
+	<td class="summary">Compare Equal self '==' b</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#PhysValue:__lt">PhysValue:__lt (b)</a></td>
+	<td class="summary">Compare less than self '<' b</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#PhysValue:__le">PhysValue:__le (b)</a></td>
+	<td class="summary">Compare Less equal(b) '<='</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#PhysValue:_error">PhysValue:_error (s, level)</a></td>
+	<td class="summary">Error Handler.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#PhysValue:_getBaseUnitString">PhysValue:_getBaseUnitString ()</a></td>
+	<td class="summary">Get base unit string.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#PhysValue:_getUnitFactor">PhysValue:_getUnitFactor (symbol)</a></td>
+	<td class="summary">Get base unit factor.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#PhysValue:__concat">PhysValue:__concat (bString)</a></td>
+	<td class="summary">String concatanation (..)
+ Converts the PhysValue into a string using the
+ unit that is concatenated to self.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#PhysValue:__tostring">PhysValue:__tostring ()</a></td>
+	<td class="summary">String conversion.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#PhysValue:format">PhysValue:format (f, symbol)</a></td>
+	<td class="summary">String format.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#PhysValue:toJson">PhysValue:toJson (symbol)</a></td>
+	<td class="summary">Generate JSon string
+ Converts the PhysValue to a Json string with the unit
+ converted to the one given in the symbol string.</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header has-description"><a name="Class_PhysValue"></a>Class PhysValue </h2>
+
+          <div class="section-description">
+          Holds the class structure of the module.
+
+          </div>
+    <dl class="function">
+    <dt>
+    <a name = "PhysValue.prefixes"></a>
+    <strong>PhysValue.prefixes</strong>
+    </dt>
+    <dd>
+    Holds the prefixes of units with
+ their factors to baseunit
+
+
+    <h3>Fields:</h3>
+    <ul>
+        <li><span class="parameter">k</span>
+        kilo
+        </li>
+        <li><span class="parameter">M</span>
+        Mega
+        </li>
+        <li><span class="parameter">G</span>
+        Giga
+        </li>
+        <li><span class="parameter">T</span>
+        Tera
+        </li>
+        <li><span class="parameter">da</span>
+        deka
+        </li>
+        <li><span class="parameter">h</span>
+        hekto
+        </li>
+        <li><span class="parameter">d</span>
+        dezi
+        </li>
+        <li><span class="parameter">c</span>
+        centi
+        </li>
+        <li><span class="parameter">m</span>
+        milli
+        </li>
+        <li><span class="parameter">u</span>
+        micro
+        </li>
+        <li><span class="parameter">n</span>
+        nano
+        </li>
+        <li><span class="parameter">p</span>
+        pico
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "PhysValue.u"></a>
+    <strong>PhysValue.u</strong>
+    </dt>
+    <dd>
+    Publishes the units table
+
+
+    <ul>
+        <li><span class="parameter">table</span>
+         u
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "PhysValue.c"></a>
+    <strong>PhysValue.c</strong>
+    </dt>
+    <dd>
+    Publishes the constants table
+
+
+    <ul>
+        <li><span class="parameter">parent</span>
+        =#PhysValue] #table c
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "PhysValue:BaseUnit"></a>
+    <strong>PhysValue:BaseUnit (symbol)</strong>
+    </dt>
+    <dd>
+    Helper function inserts a BaseUnit
+ to the baseunits table and to the
+ unit table PhysValue.u
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">symbol</span>
+         the base unit string
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "PhysValue:Unit"></a>
+    <strong>PhysValue:Unit (symbol, definition)</strong>
+    </dt>
+    <dd>
+    Helper function inserts a Unit (with
+ all prefix combinations) to the table
+ PhysValue.u
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">symbol</span>
+         the unit string
+        </li>
+        <li><span class="parameter">definition</span>
+         a string with a formula that
+ defines the unit from already existing
+ units.
+ (The unit names in the formula are automatically
+ prefixed by 'PhysValue.u.' to refence the units table.)
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "PhysValue:UnitMatch"></a>
+    <strong>PhysValue:UnitMatch (b)</strong>
+    </dt>
+    <dd>
+    Checks if the unit of self and the unit of b match.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">b</span>
+         Physical value to be checked against self
+        </li>
+    </ul>
+
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="keyword">if</span> pv:UnitMatch(pv2)</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "PhysValue:deep_copy"></a>
+    <strong>PhysValue:deep_copy (a)</strong>
+    </dt>
+    <dd>
+    Helper function: deep copies a physical
+ value.
+ The function avoids deep copy of the members
+ metatable and class
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">a</span>
+         Physical value to be copied
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "PhysValue:initialize"></a>
+    <strong>PhysValue:initialize (id, value, symbol)</strong>
+    </dt>
+    <dd>
+    Constructor: called in PhysValue.new().
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">id</span>
+         Identifier string
+        </li>
+        <li><span class="parameter">value</span>
+          number Value of the variable in unit 'symbol'
+        </li>
+        <li><span class="parameter">symbol</span>
+         Unit string (must exist in table u)
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "PhysValue:__add"></a>
+    <strong>PhysValue:__add (b)</strong>
+    </dt>
+    <dd>
+    Add b to self.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">b</span>
+         PhysValue to be added
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        #PhysValue Sum of self and b.
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "PhysValue:__sub"></a>
+    <strong>PhysValue:__sub (b)</strong>
+    </dt>
+    <dd>
+    Substract b from self.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">b</span>
+         PhysValue to be subtracted
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        #PhysValue Difference of self and b.
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">pv1 = pv2 - pv3</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "PhysValue:__unm"></a>
+    <strong>PhysValue:__unm ()</strong>
+    </dt>
+    <dd>
+    Unary minus of self.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        #PhysValue Negative value of self.
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">pv1 = -pv2</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "PhysValue:__mul"></a>
+    <strong>PhysValue:__mul (b)</strong>
+    </dt>
+    <dd>
+    Multiply self by b.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">b</span>
+         Multiplicator (can be #PhysValue or #number)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        #PhysValue self * b with correct unit
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">pv1 = pv2 * pv3
+pv1 = pv2 * number3</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "PhysValue:__pow"></a>
+    <strong>PhysValue:__pow (b)</strong>
+    </dt>
+    <dd>
+    Power(b)
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">b</span>
+         Exponent (an integer #number)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        #PhysValue self ^ b with correct unit
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">pv1 = pv2^<span class="number">2</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "PhysValue:__div"></a>
+    <strong>PhysValue:__div (b)</strong>
+    </dt>
+    <dd>
+    Divide by b
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">b</span>
+         Divisor (can be #PhysValue or #number)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        #PhysValue self / b with correct unit
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">pv1 = pv2 / pv3
+pv1 = pv2 / number3</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "PhysValue:__eq"></a>
+    <strong>PhysValue:__eq (b)</strong>
+    </dt>
+    <dd>
+    Compare Equal self '==' b
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">b</span>
+         #PhysValue to be compared
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        true if self == b
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="keyword">if</span> pv1 == pv2 <span class="keyword">then</span> ...</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "PhysValue:__lt"></a>
+    <strong>PhysValue:__lt (b)</strong>
+    </dt>
+    <dd>
+    Compare less than self '<' b
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">b</span>
+         #PhysValue to be compared
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        true if self < b
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="keyword">if</span> pv1 &lt; pv2 <span class="keyword">then</span> ...
+<span class="keyword">if</span> pv1 &gt; pv2 <span class="keyword">then</span> ...</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "PhysValue:__le"></a>
+    <strong>PhysValue:__le (b)</strong>
+    </dt>
+    <dd>
+    Compare Less equal(b) '<='
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">b</span>
+         #PhysValue to be compared
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        true if self <= b
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"><span class="keyword">if</span> pv1 &lt;= pv2 <span class="keyword">then</span> ...
+<span class="keyword">if</span> pv1 &gt;= pv2 <span class="keyword">then</span> ...</pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "PhysValue:_error"></a>
+    <strong>PhysValue:_error (s, level)</strong>
+    </dt>
+    <dd>
+    Error Handler.
+
+ This function can be overwritten to change the error handling behaviour
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">s</span>
+         Error string
+        </li>
+        <li><span class="parameter">level</span>
+         The stack level for display of error reason.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "PhysValue:_getBaseUnitString"></a>
+    <strong>PhysValue:_getBaseUnitString ()</strong>
+    </dt>
+    <dd>
+    Get base unit string.
+ Returns the string representation of the base unit.
+ This is done without any chichi. To give an example:
+ a force is expressed as 'kg*m*s^⁻2' and not as
+ kg*m/s^2 or kg*m/s²
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        String representing the base unit
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "PhysValue:_getUnitFactor"></a>
+    <strong>PhysValue:_getUnitFactor (symbol)</strong>
+    </dt>
+    <dd>
+    Get base unit factor.
+ Returns the factor of the given unit to the base unit of
+ the same dimension.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">symbol</span>
+         String representation of target unit
+ (defaults to preferred unit of PhysValue given in Constructor)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        #number giving the base unit factor
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">PhysValue:new(<span class="string">""</span>,<span class="number">1</span>,<span class="string">"km"</span>):_getUnitFactor(<span class="string">"mm"</span>)
+ returns <span class="number">1e-3</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "PhysValue:__concat"></a>
+    <strong>PhysValue:__concat (bString)</strong>
+    </dt>
+    <dd>
+    String concatanation (..)
+ Converts the PhysValue into a string using the
+ unit that is concatenated to self.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">bString</span>
+         unit string to be converted to
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        String representation of the PhysValue
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"> a = PhysValue:new(<span class="string">''</span>,<span class="number">120</span>,<span class="string">'s'</span>)
+<span class="global">print</span>(a..<span class="string">'min'</span>)
+ gives: <span class="string">'2 min'</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "PhysValue:__tostring"></a>
+    <strong>PhysValue:__tostring ()</strong>
+    </dt>
+    <dd>
+    String conversion.
+ Converts the PhysValue to a string using the
+ preferred unit that has been chosen in the
+ constructor.
+ This function calls PhysValue:format
+ with the standard format '#vg #us'
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        String representation of the PhysValue
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"> a = PhysValue:new(<span class="string">''</span>,<span class="number">12</span>,<span class="string">'km'</span>)
+<span class="global">tostring</span>(a)
+ returns <span class="string">'12 km'</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "PhysValue:format"></a>
+    <strong>PhysValue:format (f, symbol)</strong>
+    </dt>
+    <dd>
+    String format.
+ Formats the PhysValue to a string with a given format
+ and unit.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">f</span>
+         Format string.
+ In the format string can be the following tokens that
+ are substituted by the fields of the PhysValue:
+ <ul>
+ <li> '#v'  substituted by the numerical value </li>
+ <li> '#u'  substituted by the unit</li>
+ <li> '#i'  substituted by the id (name)</li>
+ </ul>
+ all tokens will be replaced by a '%' character so that
+ the following characters define the format string for
+ the string.format() function.
+ So the format string '#is: #v5.1f #us' will do the same like
+ string.format('%s: %5.1f %s', a.id, a.value, a.symbol)
+        </li>
+        <li><span class="parameter">symbol</span>
+         The unit string to which the PhysValue is
+ converted before formatting.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        String according to given format.
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example"> a = PhysValue:new(<span class="string">'Distance'</span>,<span class="number">12470</span>,<span class="string">'m'</span>)
+a:format(<span class="string">'#is: #v+12.2f [#us]'</span>, <span class="string">'km'</span>)
+ results <span class="keyword">in</span> <span class="string">'Distance:       +12.47 [km]'</span></pre>
+    </ul>
+
+</dd>
+    <dt>
+    <a name = "PhysValue:toJson"></a>
+    <strong>PhysValue:toJson (symbol)</strong>
+    </dt>
+    <dd>
+    Generate JSon string
+ Converts the PhysValue to a Json string with the unit
+ converted to the one given in the symbol string.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">symbol</span>
+         The unit string to be converted to.
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        A Json string.
+    </ol>
+
+
+
+    <h3>Usage:</h3>
+    <ul>
+        <pre class="example">PhysValue.mElectro:toJson(<span class="string">'kg'</span>)
+ will <span class="keyword">return</span> <span class="string">'{ "id": "mElectron", "value": 9.10939e-31, "unit": "kg"}'</span></pre>
+    </ul>
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.3</a></i>
+<i style="float:right;">Last updated 2015-12-18 21:53:22 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>
