@@ -90,8 +90,16 @@ function PhysValue._getUnit(definition)
   if PhysValue.u[definition] then
     return PhysValue.u[definition]
   else
-    assert(loadstring('function _(u) return '..string.gsub(definition,"([A-Za-z]+)", "u['%1']")..'; end') )()
-    return _(PhysValue.u)
+    -- Create a script that computes the given unit from units in table u
+    local script, err = loadstring('function _(u) return '..string.gsub(definition,"([A-Za-z]+)", "u['%1']")..'; end')
+    assert(script, 'Compiling of unit definition failed: '..tostring(definition)..' Err: '..tostring(err))
+    -- Executing the script defines a global function '_'
+    assert(pcall(script), 'Invalid unit definition: ' .. tostring(definition))
+    -- Call global function '_'
+    local ok, a = pcall(_, PhysValue.u)
+    -- 
+    assert(ok, 'Running of unit definition failed: ' .. tostring(definition))
+    return a
   end
 end
 -------------------------------------
@@ -189,7 +197,7 @@ end
 function PhysValue:__add(b)
   local a = PhysValue.deep_copy(self)
   assert(type(b)=='table', 'Adding is allowed with PhysValue only')
-  assert(a:UnitMatch(b), 'Unmatching unit in add: '..tostring(a)..' & '..tostring(b))
+  assert(a:UnitMatch(b), 'Unmatching unit in add: '..tostring(a)..' + '..tostring(b))
   a.value = a.value + b.value
   return a
 end
@@ -217,9 +225,9 @@ end
 -- @return #PhysValue self * b with correct unit
 -- @usage pv1 = pv2 * pv3
 --pv1 = pv2 * number3
-function PhysValue:__mul(b)
+function PhysValue:__mul(c)
   local a = PhysValue.deep_copy(self)
-  local b = PhysValue.deep_copy(b)
+  local b = PhysValue.deep_copy(c)
   if type(a)=='number' then
     b.value = b.value * a
     return b
@@ -229,6 +237,9 @@ function PhysValue:__mul(b)
   else
     for k,v in pairs(b.units or {}) do
       a.units[k] = (a.units[k]or 0) + v
+      if a.units[k] == 0 then
+        a.units[k] = nil
+      end
     end
     a.value = a.value * b.value
     a.symbol = nil
@@ -238,15 +249,20 @@ end
 
 -------------------------------------
 -- Power(b)
--- @param b Exponent (an integer #number)
+-- @param b Exponent (a #number)
 -- @return #PhysValue self ^ b with correct unit
 -- @usage pv1 = pv2^2
 function PhysValue:__pow(b)
+  assert(type(b)== 'number', "Exponent must be a number: "..tostring(b))
   local a = PhysValue.deep_copy(self)
   for k,v in pairs(a.units) do
     a.units[k] = v*b
   end
-  a.value = a.value^b
+  if b ~= 1 then
+    a.value = a.value^b
+    a.symbol = nil
+  end
+  
   return a
 end
 
@@ -258,6 +274,24 @@ end
 --pv1 = pv2 / number3
 function PhysValue:__div(b)
   return self*b^-1
+end
+
+-------------------------------------
+-- Square root
+-- @return #PhysValue self ^ (1/2) with correct unit
+-- @usage pv1 = pv2:sqrt()
+function PhysValue:sqrt()
+  assert(self.value >= 0, 'sqrt of negative values not supported.')
+  return self ^ 0.5
+end
+
+-------------------------------------
+-- Cubic root
+-- @return #PhysValue self ^ (1/3) with correct unit
+-- @usage pv1 = pv2:cbrt()
+function PhysValue:cbrt()
+  assert(self.value >= 0, 'cbrt of negative values not supported.')
+  return self ^ (1/3)
 end
 
 -------------------------------------
