@@ -72,7 +72,7 @@ function TestPhysValue:test_add()
   -- is invoked.
   local function add(a,b) return a+b; end
   
-  local err, c
+  local ok, res, c
   
   c = a+b
   assertEquals(c.value, 100.012)
@@ -85,12 +85,15 @@ function TestPhysValue:test_add()
   assertEquals(c.symbol,'mm')
   
   -- This is not allowed / we must do some voodoo to catch the assertion (see above)
-  err = pcall(add,b*b,a)
-  assertNotNil(err)
-  err = pcall(add, 1, a)
-  assertNotNil(err)
-  err = pcall(add, a, 5)
-  assertNotNil(err)
+  ok, res = pcall(add,b*b,a)
+  assertFalse(ok)
+  assertStrContains(res, 'Unmatching unit in add/sub')
+  ok,res = pcall(add, 1, a)
+  assertFalse(ok)
+  assertStrContains(res, 'Adding/subtracting is allowed with PhysValue only')
+  ok,res = pcall(add, a, 5)
+  assertFalse(ok)
+  assertStrContains(res, 'Adding/subtracting is allowed with PhysValue only')
 end
 
 function TestPhysValue:test_sub()
@@ -102,7 +105,7 @@ function TestPhysValue:test_sub()
   -- is invoked.
   local function sub(a,b) return a+b; end
   
-  local err, c
+  local ok, res, c
   
   c = a-b
   assertEquals(c.value, 100-0.012)
@@ -115,23 +118,22 @@ function TestPhysValue:test_sub()
   assertEquals(c.symbol,'mm')
   
   -- This is not allowed / we must do some voodoo to catch the assertion (see above)
-  err = pcall(sub,b*b,a)
-  assertNotNil(err)
-  err = pcall(sub, 1, a)
-  assertNotNil(err)
-  err = pcall(sub, a, 5)
-  assertNotNil(err)
+  ok, res = pcall(sub,b*b,a)
+  assertFalse(ok)
+  assertStrContains(res, 'Unmatching unit in add/sub')
+  ok, res = pcall(sub, 1, a)
+  assertFalse(ok)
+  assertStrContains(res, 'Adding/subtracting is allowed with PhysValue only')
+  ok, res = pcall(sub, a, 5)
+  assertFalse(ok)
+  assertStrContains(res, 'Adding/subtracting is allowed with PhysValue only')
 end
   
 function TestPhysValue:test_unm()
   local a = pv:new('a', 100, 'm')
   
-  -- We define a local function / Otherwise the formulas that 
-  -- we want to test for assertion are evaluated before assertError
-  -- is invoked.
-  local function sub(a,b) return a+b; end
-  
-  local err, c
+ 
+  local c
   
   c = -a
   assertEquals(c.value, -100)
@@ -257,10 +259,11 @@ function TestPhysValue:test_sqrt()
   local function _sqrt(v) return v:sqrt(); end
   
   
-  local err
+  local ok, res
   -- Square root of negative number is not supported.
-  err, c = pcall(_sqrt, a)
-  assertNotNil(err)
+  ok, res = pcall(_sqrt, a)
+  assertFalse(ok)
+  assertStrContains(res,'sqrt of negative values not supported.')
   
 end
 
@@ -290,17 +293,16 @@ function TestPhysValue:test_cbrt()
 
   local function _cbrt(a) return a:cbrt(); end
   
-  local err
+  local ok, res
   -- Square root of negative number is not supported.
-  err, c = pcall(_cbrt, a)
-  assertNotNil(err)
+  ok, res = pcall(_cbrt, a)
+  assertFalse(ok)
+  assertStrContains(res,'cbrt of negative values not supported.')
   
 end
 
 
 function TestPhysValue:test_pow()
-  local a = pv:new('a', 100, 'm')
-  local b = pv:new('b', 12, 'ms')
   local d = pv:new('d', 0, 'N')
   local s = pv:new('s', 12, 'm/s')
   
@@ -325,12 +327,169 @@ function TestPhysValue:test_pow()
   assertEquals(c.units.kg, -1)
   assertEquals(c.units.s,2)
   assertEquals(c.symbol,nil)
+end
   
+function TestPhysValue:test_eq()
+  local a = pv:new('a', 100, 'm')
+  local b = pv:new('b', 100, 's')
+  
+  local c = a
+  assertEquals(a==a, true)
+  assertEquals(c==a, true)
+  assertEquals(c==1*a, true)
+  assertEquals(c==(1+1e-12)*a, false)
+  assertEquals(c~=(1+1e-12)*a, true)
+  assertEquals(a==b, false)
+  assertEquals(a~=b, true)
+end
+
+function TestPhysValue:test_lt()
+  local a = pv:new('a', 100, 'm')
+  local b = pv:new('b', 100, 's')
+  
+  local c = a
+  assertEquals(a<a, false)
+  assertEquals(a>a, false)
+  assertEquals(c<a, false)
+  assertEquals(c>a, false)
+  assertEquals(c<(1+1e-12)*a, true)
+  assertEquals(c>(1+1e-12)*a, false)
+  assertEquals((1+1e-12)*a>c, true)
+  assertEquals((1+1e-12)*a<c, false)
+  
+  function _lt(a,b) return a < b; end
+  
+  local ok, res
+  ok, res = pcall(_lt,a,b)
+  assertFalse(ok)
+  assertStrContains(res, "Unmatching unit in compare <:")
+end
+
+function TestPhysValue:test_le()
+  local a = pv:new('a', 100, 'm')
+  local b = pv:new('b', 100, 's')
+  
+  local c = a
+  assertEquals(a<=a, true)
+  assertEquals(a>=a, true)
+  assertEquals(c<=a, true)
+  assertEquals(c>=a, true)
+  assertEquals(c<=(1+1e-12)*a, true)
+  assertEquals(c>=(1+1e-12)*a, false)
+  assertEquals((1+1e-12)*a>=c, true)
+  assertEquals((1+1e-12)*a<=c, false)
+  
+  function _le(a,b) return a <= b; end
+  
+  local ok, res
+  ok, res = pcall(_le,a,b)
+  assertFalse(ok)
+  assertStrContains(res, "Unmatching unit in compare <=:")
+  
+end
+
+function TestPhysValue:test_getBaseUnitString()
+  local s = pv.u['N']:_getBaseUnitString()
+  -- The resulting string does not guarantee the sequence of
+  -- base units. So we have to check for any possible sequence.
+  assertStrContains(s,"kg")
+  assertStrContains(s,"m")
+  assertStrContains(s,"s^-2")
+  
+  s=s:gsub('kg','',1)
+  s=s:gsub('m','',1)
+  s=s:gsub('s%^%-2','',1)
+  
+  assertStrMatches(s,'**')
+end
+
+function TestPhysValue:test_getUnitFactor()
+  assertEquals(pv.u['mm']:_getUnitFactor('mm'), 0.001)
+  assertEquals(pv.u['mm']:_getUnitFactor(), 0.001)
+  local a = pv.u['m'] / pv.u['s']
+  assertEquals(a:_getUnitFactor('km/hr'), 1/3.6)
+  
+  local function getUnitFactor(p,unit) return p:_getUnitFactor(unit); end
+  
+  local ok, res
+  
+  ok, res = pcall(getUnitFactor, a, 1)
+  assertFalse(ok)
+  assertStrContains(res,'No string unit: ')
+  
+  ok,res = pcall(getUnitFactor, a, nil)
+  assertFalse(ok)
+  assertStrContains(res,'No unit given.')
+  
+  ok,res = pcall(getUnitFactor, a, 'm/s^2')
+  assertFalse(ok)
+  assertStrContains(res,'Unmatching units in unit conversion: ')
+end
+
+function TestPhysValue:test_getValue()
+  assertEquals(pv.u['mm']:getValue('km'), 1e-6)
+  local a = pv.u['m'] / pv.u['s']
+  assertAlmostEquals(a:getValue('km/hr'), 3.6, 1e-12)
+  
+  local function getValue(p,unit) return p:getValue(unit); end
+  
+  local ok, res
+  
+  ok, res = pcall(getValue, a, 1)
+  assertFalse(ok)
+  assertStrContains(res,'No string unit: ')
+  
+  ok,res = pcall(getValue, a, nil)
+  assertFalse(ok)
+  assertStrContains(res,'No unit given.')
+  
+  ok,res = pcall(getValue, a, 'm/s^2')
+  assertFalse(ok)
+  assertStrContains(res,'Unmatching units in unit conversion: ')
+end
+
+function TestPhysValue:test_setPrefUnit()
+  local a = pv.u['km'] / pv.u['hr']
+  a:setPrefUnit('m/s')
+  assertEquals(a.symbol,'m/s')
+  local function setPrefUnit(p,unit) return p:setPrefUnit(unit); end
+  
+  local ok, res
+  
+  ok, res = pcall(setPrefUnit, a, 1)
+  assertFalse(ok)
+  assertStrContains(res,'No string unit: ')
+  
+  ok,res = pcall(setPrefUnit, a, nil)
+  assertFalse(ok)
+  assertStrContains(res,'No unit given.')
+  
+  ok,res = pcall(setPrefUnit, a, 'm/s^2')
+  assertFalse(ok)
+  assertStrContains(res,'Unmatching units in unit conversion: ')
   
   
 end
-  
 
+function TestPhysValue:test_concat()
+  local a = pv.u['m'] / pv.u['s']
+  a:setPrefUnit('m/s')
+  assertStrMatches((2*a)..'km/hr','7.2 km/hr')
+  assertStrMatches(a .. '', '1 m/s')
+
+  local function concat(p,unit) return p..unit; end
+  
+  local ok, res
+  
+  ok, res = pcall(concat, a, 1)
+  assertFalse(ok)
+  assertStrContains(res,'No string unit: ')
+  
+  ok,res = pcall(concat, a, 'm/s^2')
+  assertFalse(ok)
+  assertStrContains(res,'Unmatching units in unit conversion: ')
+
+end
 
 lu = LuaUnit.new()
 lu:setOutputType("tap")
