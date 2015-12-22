@@ -17,3 +17,5 @@ You should have a look at the **Physics Calculator** if you want to calculate in
 interactively - it's sensationally easy! If you plan to write a bigger Lua program and you like the OOP style
 you might want to go with **physvalue**.
 
+## Documentation
+The code is documented using [**ldoc**](). So have a look at the [**documentation**](https://htmlpreview.github.io/?https://github.com/wipfl/physvalue/blob/master/doc/index.html).

@@ -17,7 +17,7 @@ function TestPhysValue:test_getUnit()
   assertEquals(v.units.s,-1)
   assertEquals(v.symbol,nil)
   -- combined unit / not in base units.
-  v = pv._getUnit('km/hr')
+  v = pv._getUnit('km/h')
   assertEquals(v.value, 1000/3600)
   assertEquals(v.units.m,1)
   assertEquals(v.units.s,-1)
@@ -31,9 +31,9 @@ function TestPhysValue:test_UnitMatch()
   
   assertEquals(a:UnitMatch(pv._getUnit('km')), true)
   assertEquals(a:UnitMatch(pv._getUnit('mm')), true)
-  assertEquals(a:UnitMatch(pv._getUnit('km*m/hr*s/mm')), true)
+  assertEquals(a:UnitMatch(pv._getUnit('km*m/h*s/mm')), true)
   local c = a / b
-  assertEquals(c:UnitMatch(pv._getUnit('km/hr')), true)
+  assertEquals(c:UnitMatch(pv._getUnit('km/h')), true)
 
   assertEquals(a:UnitMatch(b), nil)
 end
@@ -407,7 +407,7 @@ function TestPhysValue:test_getUnitFactor()
   assertEquals(pv.u['mm']:_getUnitFactor('mm'), 0.001)
   assertEquals(pv.u['mm']:_getUnitFactor(), 0.001)
   local a = pv.u['m'] / pv.u['s']
-  assertEquals(a:_getUnitFactor('km/hr'), 1/3.6)
+  assertEquals(a:_getUnitFactor('km/h'), 1/3.6)
   
   local function getUnitFactor(p,unit) return p:_getUnitFactor(unit); end
   
@@ -429,7 +429,7 @@ end
 function TestPhysValue:test_getValue()
   assertEquals(pv.u['mm']:getValue('km'), 1e-6)
   local a = pv.u['m'] / pv.u['s']
-  assertAlmostEquals(a:getValue('km/hr'), 3.6, 1e-12)
+  assertAlmostEquals(a:getValue('km/h'), 3.6, 1e-12)
   
   local function getValue(p,unit) return p:getValue(unit); end
   
@@ -449,7 +449,7 @@ function TestPhysValue:test_getValue()
 end
 
 function TestPhysValue:test_setPrefUnit()
-  local a = pv.u['km'] / pv.u['hr']
+  local a = pv.u['km'] / pv.u['h']
   a:setPrefUnit('m/s')
   assertEquals(a.symbol,'m/s')
   local function setPrefUnit(p,unit) return p:setPrefUnit(unit); end
@@ -474,8 +474,7 @@ end
 function TestPhysValue:test_concat()
   local a = pv.u['m'] / pv.u['s']
   a:setPrefUnit('m/s')
-  assertStrMatches((2*a)..'km/hr','7.2 km/hr')
-  assertStrMatches(a .. '', '1 m/s')
+  assertStrMatches((2*a)..'km/h','7.2 km/h')
 
   local function concat(p,unit) return p..unit; end
   
@@ -489,6 +488,41 @@ function TestPhysValue:test_concat()
   assertFalse(ok)
   assertStrContains(res,'Unmatching units in unit conversion: ')
 
+end
+
+function TestPhysValue:test_tostring()
+  local a = pv.u['m'] / pv.u['s']
+  a:setPrefUnit('m/s')
+  assertStrMatches(tostring(a), '1 m/s')
+end
+
+function TestPhysValue:test_format()
+  local vMax = pv:new('vMax', 4, 'm/s')
+  assertEquals(vMax:format(), '4 m/s')
+  assertEquals(vMax:format(nil, 'km/h'), '14.4 km/h')
+  assertEquals(vMax:format('#is #vg #us', nil), 'vMax 4 m/s')
+  assertEquals(vMax:format('#is #vg #us', 'km/h'), 'vMax 14.4 km/h')
+  assertEquals(vMax:format('#is #vg #us', 'km/h'), 'vMax 14.4 km/h')
+  vMax = pv:new('vMax', -1/3, 'm/s')
+  assertEquals(vMax:format('#is #v12.9f #us', nil), 'vMax -0.333333333 m/s')
+  assertAlmostEquals(tonumber(vMax:format('#v.13g', nil)), vMax.value, 1e-12)
+  assertAlmostEquals(tonumber(pv.c.mProton:format('#v.13g', nil)), pv.c.mProton.value, 1e-12)
+end
+
+function TestPhysValue:test_toJson()
+  local vMax = pv:new('vMax', 4, 'm/s')
+  assertEquals(vMax:toJson(), '{ "type": "PhysValue", "id": "vMax", "value": 4, "unit": "m/s"}')
+  assertEquals(vMax:toJson('km/h'), '{ "type": "PhysValue", "id": "vMax", "value": 14.4, "unit": "km/h"}')
+  vMax = pv:new('vMax', -1/3, 'm/s')
+  assertEquals(vMax:toJson('m/s'), '{ "type": "PhysValue", "id": "vMax", "value": -0.3333333333333, "unit": "m/s"}')
+  assertEquals(pv.c.mProton:toJson(), '{ "type": "PhysValue", "id": "mProton", "value": 1.67492e-27, "unit": "kg"}')
+  
+end
+
+function TestPhysValue:test_setId()
+  local vMax = pv:new('vMax', 4, 'm/s')
+  assertEquals(vMax:format('#is #vg #us', nil), 'vMax 4 m/s')
+  assertEquals(vMax:setId('vMin'):format('#is #vg #us', nil), 'vMin 4 m/s')
 end
 
 lu = LuaUnit.new()

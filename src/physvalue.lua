@@ -52,18 +52,8 @@ local u = {}
 
 --------------------------------------
 --Publishes the units table
--- @field #table u 
+-- @field table u 
 PhysValue.u = u
-
---------------------------------------
--- holds all available constants
-local c = {}
-
---------------------------------------
---Publishes the constants table
--- @field  [parent=#PhysValue] #table c 
-
-PhysValue.c = c
 
 -------------------------------------
 -- Helper function inserts a BaseUnit
@@ -94,7 +84,7 @@ function PhysValue._getUnit(definition)
     local function _loadfunc()
       if first then
         first = nil
-        return 'function _(u) return '..string.gsub(definition,"([A-Za-z]+)", "u['%1']")..'; end'
+        return 'function _() return '..definition..'; end'
       else
         return nil
       end
@@ -105,8 +95,10 @@ function PhysValue._getUnit(definition)
     assert(script, 'Compiling of unit definition failed: '..tostring(definition)..' Err: '..tostring(err))
     -- Executing the script defines a global function '_'
     assert(pcall(script), 'Invalid unit definition: ' .. tostring(definition))
+    -- Add all units in table u to the environment of our function '_'.
+    setfenv (_, PhysValue.u)
     -- Call global function '_'
-    local ok, a = pcall(_, PhysValue.u)
+    local ok, a = pcall(_)
     -- 
     assert(ok, 'Running of unit definition failed: ' .. tostring(definition))
     return a
@@ -125,6 +117,7 @@ end
 -- prefixed by 'PhysValue.u.' to refence the units table.)
 -- @param withoutPrefix #boolean if true no prefixed units will be generated.
 function PhysValue.addUnit(symbol, definition, withoutPrefix)
+  assert(symbol ~= 'e', 'Sorry, a unit may not be named "e" for technical reasons')
   local b = PhysValue._getUnit(definition)
   u[symbol] = b
   u[symbol].symbol = symbol
@@ -194,7 +187,7 @@ function PhysValue:initialize(id, value, symbol)
     self.value = value * a.value
     self.units = a.units
     self.symbol = symbol
-  elseif type(value) == 'table' then
+  elseif PhysValue.isInstanceOf(value,PhysValue) then
     self.value = value.value or 0
     self.units = value.units or {}
     self.symbol = value.symbol or ''
@@ -213,7 +206,7 @@ end
 -- @return #PhysValue Sum of self and b. 
 function PhysValue:__add(b)
   local a = PhysValue.deep_copy(self)
-  assert(type(a)=='table' and type(b)=='table', 'Adding/subtracting is allowed with PhysValue only')
+  assert(PhysValue.isInstanceOf(a,PhysValue) and PhysValue.isInstanceOf(b,PhysValue), 'Adding/subtracting is allowed with PhysValue only')
   assert(a:UnitMatch(b), 'Unmatching unit in add/sub: '..tostring(a)..' + '..tostring(b))
   a.value = a.value + b.value
   return a
@@ -352,10 +345,12 @@ end
 -- @return String representing the base unit
 function PhysValue:_getBaseUnitString()
   local ustring
-  for k,v in pairs(self.units) do
-    if v~=0 then
-      ustring = ustring and (ustring .. '*') or ''
-      ustring = ustring..k..(v==1 and '' or '^'..v)
+  if self.units then
+    for k,v in pairs(self.units) do
+      if v~=0 then
+        ustring = ustring and (ustring .. '*') or ''
+        ustring = ustring..k..(v==1 and '' or '^'..v)
+      end
     end
   end
   return ustring or ""
@@ -399,6 +394,7 @@ end
 -- The numerical value of the variable is not touched as it
 -- is expressed in base units. 
 -- @param unit String representation of preferred unit 
+-- @return self PhysValue of resulting instance
 -- @usage print(PhysValue:new("",2,"km"):setPrefUnit("mm"))
 --   prints "2000 mm"
 function PhysValue:setPrefUnit(unit)
@@ -406,8 +402,20 @@ function PhysValue:setPrefUnit(unit)
   assert(type(unit) == 'string', 'No string unit: ' .. tostring(unit))
   assert(self:UnitMatch(unit), 'Unmatching units in unit conversion: '.. (self.symbol or self:_getBaseUnitString()) ..' & '..unit)
   self.symbol = unit
+  return self
 end
 
+-------------------------------------
+-- Set variable id.
+-- This affects the conversion to string only.
+-- @param id Name string of variable
+-- @return self PhysValue of resulting instance
+-- @usage print(PhysValue:new("",2,"km"):setId('Distance'):format("#is #vg #us"))
+--   prints "Distance 2000 mm"
+function PhysValue:setId(id)
+  self.id = id or ''
+  return self
+end
 
 -------------------------------------
 -- String concatanation (..)
@@ -421,7 +429,7 @@ end
 function PhysValue:__concat(bString)
   assert(type(bString)=='string', 'No string unit: ' .. tostring(bString))
 
-  return self:format(nil, (bString:len() > 0) and bString or nil)
+  return self:format(nil, bString)
 end
 
 -------------------------------------
@@ -474,11 +482,11 @@ function PhysValue:format(f,symbol)
     ustring = self:_getBaseUnitString()
   end
   str = string.gsub(f,"#v","%%")
-  str = string.format(str,value)
+  str = string.format(str,value or 0)
   str = string.gsub(str,"#u","%%")
   str = string.format(str,ustring)
   str = string.gsub(str,"#i","%%")
-  str = string.format(str,self.id)
+  str = string.format(str,self.id or '')
   return str
 end
 
@@ -488,10 +496,10 @@ end
 -- converted to the one given in the symbol string.
 -- @param symbol The unit string to be converted to.
 -- @return A Json string.
--- @usage PhysValue.mElectro:toJson('kg')
--- will return '{ "id": "mElectron", "value": 9.10939e-31, "unit": "kg"}'
+-- @usage PhysValue.mElectron:toJson('kg')
+-- will return '{ "type": "PhysValue", "id": "mElectron", "value": 9.10939e-31, "unit": "kg"}'
 function PhysValue:toJson(symbol)
-  return self:format('{ "id": "#is", "value": #v20g, "unit": "#us"}', symbol)
+  return self:format('{ "type": "PhysValue", "id": "#is", "value": #v.13g, "unit": "#us"}', symbol)
 end
 
 
@@ -506,7 +514,8 @@ BaseUnit'cd'
 BaseUnit'rad'
 BaseUnit'sr'
 
-Unit('m', 'm')
+
+Unit('m', 'm') 
 Unit('g', '.001*kg')
 Unit('s', 's')
 Unit('A', 'A')
@@ -538,70 +547,51 @@ Unit('lx', 'lm/m^2')
 Unit('kat','mol/s')
 
 --SI ACCEPTABLE UNITS
-u.min = 60*u.s
-u.hr = 60*u.min
-u.day = 24*u.hr
+Unit('min', '60*s', true)
+Unit('h', '60*min', true)
+Unit('day','24*h', true)
+-- we can't use Unit() as math.pi is not member of PhysValue.u (see function _getUnit() )
 u.deg = math.pi/180*u.rad
-u.ha = 100*u.m*100*u.m
+Unit('ha', '100*m*100*m', true)
 Unit('L', 'dm^3')
-u.tonne = 1000*u.kg
-u.Ang = 1e-10*u.m
+Unit('t', '1000*kg', true)
+Unit('Mt', '1e6*kg', true)
+Unit('Ang','1e-10*m', true)
 
 --SI EXPERIMENTAL UNITS
-u.eV = 1.60217733e-19*u.J
-Unit('eV', 'eV')
-u.amu = 1.6605402e-27*u.kg
+Unit('eV', '1.60217733e-19*J')
+Unit('Da', '1.6605402e-27*kg') -- Dalton, former atomic mass unit amu
 
 -- Own units
 Unit('bar','1000*hPa')
 
 --CONVERSION UNITS
-u.mi = 1609.344*u.m
-u.ft = u.mi/5280
-u.yd = 3*u.ft  
-u.inch = u.ft/12  
-u.lb = u.kg/2.20462262185  
-u.lbf = 4.4482216152605*u.N  
-u.hp = 746*u.W  
+Unit('mi', '1609.344*m', true)
+Unit('ft', 'mi/5280', true)
+Unit('yd', '3*ft', true)  
+Unit('inch', 'ft/12', true)  
+Unit('lb', 'kg/2.20462262185', true)
+Unit('lbf', '4.4482216152605*N', true)  
+Unit('hp', '746*W', true)  
 
 --PHYSICAL CONSTANTS
-c.lightspeed = PhysValue:new('vlight', 2.99792458e8, 'm/s')
-c.e = PhysValue:new('e', 1, 'eV/J*C')
-c.G = PhysValue:new('G', 6.67259e-11, 'N*m^2/kg^2')
-c.g_0 = PhysValue:new('gravityConstant', 9.80665, 'N/kg')
-c.mass_e = PhysValue:new('mElectron', 9.10939e-31, 'kg')
-c.mass_neutron = PhysValue:new('mNeutron', 1.67262e-27, 'kg')
-c.mass_proton = PhysValue:new('mProton', 1.67492e-27, 'kg')
-c.epsilon_0 = PhysValue:new('epsilon0', 8.854e-12, 'C^2/(N*m^2)')
-c.k = 1/4*math.pi*c.epsilon_0
-c.N_A = PhysValue:new('N_A', 6.02214129e23, '1/mol')
 
---[[DEBUG
-local function main()
-  local gew1 = PhysValue:new("Gewicht1", -100, 'g')
-  print(gew1)
-  local pressure = PhysValue:new("Kraft", 100, 'bar')
-  print(pressure..'kg/(m*s^2)')
-  print(pressure..'hPa')
-  print(u.hPa)
-  print(gew1:toJson('mg'))
-  print(gew1:format("#i8.8s: #v+8.2f #u-3.3s<-"))
-  print(PhysValue.c.mass_e:format("#i8.8s: #v+12g #u-3.3s<-", 'g'))
-  print(PhysValue.c.mass_e:toJson())
-  --print(PhysValue.c.mass_e:toJson('N'))
-  local a = PhysValue:new('Distance',12470,'m')
-  print(a:format('#is: #v+12.2f [#us]', 'km'))
-  local gew2 = PhysValue:new("Gewicht2", 0.102, 'kg')
-  
-  if (gew1 == gew2) then error('Alarm!') end
-  if not (gew1 == gew1) then error('Alarm!') end
-  if gew1 > gew2 then error('Alarm!') end
-  if not (gew1 < gew2) then error('Alarm!') end
-  
-end
+--------------------------------------
+-- Table of physical constants 
+-- @table c 
 
+PhysValue.c = {
+  c=PhysValue:new('c', 2.99792458e8, 'm/s'), -- Speed of light in vacuum
+  e=PhysValue:new('e', 1, 'eV/J*C'), -- charge of electron
+  G=PhysValue:new('G', 6.67259e-11, 'N*m^2/kg^2'), -- Newtonian constant of gravity
+  g_0=PhysValue:new('g_0', 9.80665, 'N/kg'), -- Standard gravity accelaration on earth
+  mElectron=PhysValue:new('mElectron', 9.10939e-31, 'kg'), -- Mass of electron
+  mNeutron=PhysValue:new('mNeutron', 1.67262e-27, 'kg'), -- Mass of neutron
+  mProton=PhysValue:new('mProton', 1.67492e-27, 'kg'), -- Mass of proton
+  epsilon_0=PhysValue:new('epsilon0', 8.854e-12, 'C^2/(N*m^2)'), -- Electric constant (vacuum permittivity)
+  k=PhysValue:new('k', 8.987551787e9, 'N*m^2/C^2'), -- Coulomb's constant 1/(4*pi*epsilon_0)
+  N_A=PhysValue:new('N_A', 6.02214129e23, '1/mol') --Avogadro's number
+}
 
-main()
---]]
 
 return PhysValue
