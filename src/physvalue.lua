@@ -91,14 +91,24 @@ function PhysValue._getUnit(definition)
     end
     
     -- Create a script that computes the given unit from units in table u
-    local script, err = load(_loadfunc)
-    assert(script, 'Compiling of unit definition failed: '..tostring(definition)..' Err: '..tostring(err))
-    -- Executing the script defines a global function '_'
-    assert(pcall(script), 'Invalid unit definition: ' .. tostring(definition))
-    -- Add all units in table u to the environment of our function '_'.
-    setfenv (_, PhysValue.u)
+    local script, err
+    local ok, a
+    if _VERSION == 'Lua 5.1' then
+      script, err = load(_loadfunc)
+      assert(script, 'Compiling of unit definition failed: '..tostring(definition)..' Err: '..tostring(err))
+      -- Executing the script defines a global function '_'
+      assert(pcall(script), 'Invalid unit definition: ' .. tostring(definition))
+      -- Add all units in table u to the environment of our function '_'.
+      setfenv (_, PhysValue.u)
     -- Call global function '_'
-    local ok, a = pcall(_)
+    ok, a = pcall(_)
+    
+  else
+      ok =true
+      script = assert(load('return '..definition, nil, nil, PhysValue.u), 'Compiling of unit definition failed: '..tostring(definition))
+      ok, a = pcall(script)
+    end
+    
     -- 
     assert(ok, 'Running of unit definition failed: ' .. tostring(definition))
     return a
@@ -108,7 +118,7 @@ end
 -------------------------------------
 -- Helper function inserts a Unit (with 
 -- all prefix combinations) to the table
--- PhysValue.u
+-- PhysValue.uassert(pcall(script), 'Invalid unit definition: ' .. tostring(definition))
 -- @param symbol The unit string (only A-Z and a-z are allowed in string)
 -- @param definition a string with a formula that
 -- defines the unit from already existing

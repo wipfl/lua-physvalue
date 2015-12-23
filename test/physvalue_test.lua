@@ -9,7 +9,7 @@ TestPhysValue = {}
 function TestPhysValue:test_getUnit()
   -- simple unit
   assertIsTable(pv._getUnit('m'))
-  assertError(pv._getUnit('dummy'))
+  assertError((function() return pv._getUnit('dummy'); end)())
   -- combined unit.
   local v = pv._getUnit('m/s')
   assertEquals(v.value, 1)
