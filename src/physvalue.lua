@@ -104,7 +104,6 @@ function PhysValue._getUnit(definition)
     ok, a = pcall(_)
     
   else
-      ok =true
       script = assert(load('return '..definition, nil, nil, PhysValue.u), 'Compiling of unit definition failed: '..tostring(definition))
       ok, a = pcall(script)
     end
@@ -118,7 +117,7 @@ end
 -------------------------------------
 -- Helper function inserts a Unit (with 
 -- all prefix combinations) to the table
--- PhysValue.uassert(pcall(script), 'Invalid unit definition: ' .. tostring(definition))
+-- PhysValue.u
 -- @param symbol The unit string (only A-Z and a-z are allowed in string)
 -- @param definition a string with a formula that
 -- defines the unit from already existing
