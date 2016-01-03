@@ -193,8 +193,7 @@ luaunit.lua is added to the repository for your convenience.
 ## Documentation
 The code is documented using [**ldoc**](http://stevedonovan.github.com/ldoc/). 
 So have a look at the 
-[**documentation**](https://htmlpreview.github.io/?https://github.com/wipfl/
-physvalue/blob/master/doc/index.html).
+[**documentation**](https://htmlpreview.github.io/?https://github.com/wipfl/physvalue/blob/master/doc/index.html).
 
 ## License
 PhysValue is distributed under the MIT license.
