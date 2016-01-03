@@ -1,4 +1,4 @@
---[[DEBUG]] package.path = package.path .. ';physvalue/src/?.lua;physvalue/test/?.lua'
+--[[DEBUG]] package.path = package.path .. ';../src/?.lua'
 EXPORT_ASSERT_TO_GLOBALS = true
 require('luaunit')
 require('math')
@@ -475,7 +475,8 @@ function TestPhysValue:test_concat()
   local a = pv.u['m'] / pv.u['s']
   a:setPrefUnit('m/s')
   assertStrMatches((2*a)..'km/h','7.2 km/h')
-
+  assertStrMatches('Speed: '..a, 'Speed: 1 m/s')
+  
   local function concat(p,unit) return p..unit; end
   
   local ok, res
