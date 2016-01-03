@@ -2,7 +2,6 @@
 -- Provides a class for physical value arithmetics.
 -- @module PhysValue
 
---[[DEBUG]] package.path = package.path .. ';physvalue/src/?.lua'
 local class = require'middleclass'
 local debug = require'debug'
 
@@ -436,9 +435,13 @@ end
 -- print(a..'min')
 --   gives: '2 min'
 function PhysValue:__concat(bString)
-  assert(type(bString)=='string', 'No string unit: ' .. tostring(bString))
+  if type(self) == 'string' then
+    return self .. tostring(bString)
+  else
+    assert(type(bString)=='string', 'No string unit: ' .. tostring(bString))
 
-  return self:format(nil, bString)
+    return self:format(nil, bString)
+  end
 end
 
 -------------------------------------
