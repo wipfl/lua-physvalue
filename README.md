@@ -25,7 +25,7 @@ you might want to go with **physvalue**.
 ## Some examples
 You can look at the file example.lua to have some simple examples.
 But here is the computation for a bike tour:
-```{r}
+```lua
 pv=require('physvalue')
 
 -- Define the start and end readings of the speedometer
